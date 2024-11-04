@@ -2,6 +2,9 @@ import User from "../models/user.js";
 import bcrypt from "bcrypt";
 import JWT from "jsonwebtoken";
 import tokenSignature from "../views/global.js";
+import { PrismaClient } from "@prisma/client";
+
+const prisma = new PrismaClient()
 
 export const renderLoginPage = async (req, res) => {
   try {
@@ -16,11 +19,11 @@ export const login = async (req, res) => {
   const { userName, password } = req.body;
 
   try {
-    User.fetchUserByUsername(userName).then((credentials) => {
-      if (credentials) {
-        const hashPass = credentials[0].dataValues.password;
-        const isMatch = bcrypt.compare(password, hashPass);
-        if (isMatch) {
+    const user = await prisma.user.findUnique({ where: { userName } })
+    if (user) {
+      const userPassword = user.password
+      const isMatch = bcrypt.compare(password, userPassword);
+      if (isMatch) {
           const token = JWT.sign({ userName }, tokenSignature);
           req.session.token = token;
           res.redirect("/");
@@ -30,7 +33,8 @@ export const login = async (req, res) => {
       } else {
         res.redirect("/login");
       }
-    });
+
+    
   } catch (error) {
     console.error(error);
     res.status(500).redirect("/error");
@@ -51,7 +55,13 @@ export const signup = async (req, res) => {
 
   try {
     const hashPassword = await bcrypt.hash(password, 10);
-    await User.insertUser({ userName, password: hashPassword });
+    await prisma.user.create({
+      data: {
+        userName: userName,
+        password: hashPassword
+      }
+    })
+
     res.redirect("/login");
   } catch (error) {
     console.error(error);

@@ -12,22 +12,18 @@ import userAuth from "./routes/userAuth.js";
 import sequelize from "./utils/database.js";
 import connectSessionSequelize from "connect-session-sequelize";
 import session from "express-session";
+import PrismaSessionStore from "./utils/prisma-store.js";
 const app = express();
 const PORT = 3000;
 
-const SequelizeStore = connectSessionSequelize(session.Store);
-const sessionStore = new SequelizeStore({
-  db: sequelize,
-});
-
-sessionStore.sync();
+const primaStore = new PrismaSessionStore()
 
 app.use(
   session({
     secret: "secret",
     resave: false,
     saveUninitialized: false,
-    store: sessionStore,
+    store: primaStore,
   })
 );
 
