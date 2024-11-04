@@ -18,8 +18,8 @@ model User {
 
 model Project {
   id         String   @id @unique @default(uuid())
-  title      String   @unique
-  type   String
+  projectTitle      String   @unique
+  projectType   String
   overview   String
   image   String
   created_at DateTime @default(now())

@@ -1,9 +1,12 @@
 import Project from "../models/project.js";
+import { PrismaClient } from "@prisma/client";
 
+
+const prisma = new PrismaClient()
 /* PROJECT OVERVIEW */
 export const renderProject = async (req, res) => {
   try {
-    const projects = await Project.findAll();
+    const projects = await prisma.project.findMany();
     res.render("home", { projects: projects, isLoggedIn: global.isLoggedIn });
   } catch (error) {
     console.error(error);
@@ -13,7 +16,7 @@ export const renderProject = async (req, res) => {
 
 export const renderEditProject = async (req, res) => {
   try {
-    const project = await Project.findByPk(req.params.id);
+    const project = await prisma.project.findUnique(req.params.id);
     if (project) {
       res.render("edit-project", {
         project: project,
@@ -34,7 +37,7 @@ export const editProject = async (req, res) => {
     const image = req.file.destination + "/" + req.file.filename;
     const id = req.params.id;
 
-    const project = await Project.findByPk(id);
+    const project = await prisma.project.findUnique(id);
 
     if (!project) {
       return res.status(404).send("Not found");
