@@ -1,4 +1,7 @@
 import session from "express-session";
+import { PrismaClient } from "@prisma/client";
+
+const prisma = new PrismaClient();
 
 class PrismaSessionStore extends session.Store {
   async get(sid, callback) {
