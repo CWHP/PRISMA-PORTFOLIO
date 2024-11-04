@@ -1,9 +1,11 @@
 import Project from "../models/project.js";
+import { PrismaClient } from "@prisma/client";
 
+const prisma = new PrismaClient();
 /* PROJECT OVERVIEW */
 export const renderProject = async (req, res) => {
   try {
-    const projects = await Project.findAll();
+    const projects = await prisma.project.findMany();
     res.render("home", { projects: projects, isLoggedIn: global.isLoggedIn });
   } catch (error) {
     console.error(error);
@@ -13,7 +15,8 @@ export const renderProject = async (req, res) => {
 
 export const renderEditProject = async (req, res) => {
   try {
-    const project = await Project.findByPk(req.params.id);
+    const id = req.params.id;
+    const project = await prisma.project.findUnique({ where: { id } });
     if (project) {
       res.render("edit-project", {
         project: project,
@@ -34,7 +37,7 @@ export const editProject = async (req, res) => {
     const image = req.file.destination + "/" + req.file.filename;
     const id = req.params.id;
 
-    const project = await Project.findByPk(id);
+    const project = await prisma.project.findUnique({ where: { id } });
 
     if (!project) {
       return res.status(404).send("Not found");
@@ -45,7 +48,15 @@ export const editProject = async (req, res) => {
     project.overview = overview;
     project.image = image;
 
-    await project.save();
+    await prisma.project.update({
+      where: { id },
+      data: {
+        projectTitle: projectTitle,
+        projectType: projectType,
+        overview: overview,
+        image: image,
+      },
+    });
 
     res.redirect("/");
   } catch (error) {
@@ -67,11 +78,8 @@ export const addProject = async (req, res) => {
   try {
     const { projectTitle, projectType, overview } = req.body;
     const image = req.file.destination + "/" + req.file.filename;
-    await Project.create({
-      projectTitle,
-      projectType,
-      overview,
-      image,
+    await prisma.project.create({
+      data: { projectTitle, projectType, overview, image },
     });
     res.redirect("/");
   } catch (error) {
@@ -82,7 +90,7 @@ export const addProject = async (req, res) => {
 
 export const deleteProject = async (req, res) => {
   try {
-    await Project.destroy({ where: { id: req.params.id } });
+    await prisma.project.delete({ where: { id: req.params.id } });
     res.redirect("/");
   } catch (error) {
     console.error(error);
